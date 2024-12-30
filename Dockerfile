@@ -18,7 +18,7 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the built JAR file from the build stage
-COPY --from=build /app/target/springProject-1.0.0-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/emp_backend-1.0.0-SNAPSHOT.jar app.jar
 
 # Expose the port your application listens on
 EXPOSE 5000
