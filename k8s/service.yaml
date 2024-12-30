@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: spring-boot-service
   annotations:
-    service.beta.kubernetes.io/azure-load-balancer-resource-group: "springboot-backend"
+    service.beta.kubernetes.io/azure-load-balancer-resource-group: "dev-springboot-backend-northeu"
 spec:
   type: LoadBalancer
   loadBalancerIP: 172.205.106.22
