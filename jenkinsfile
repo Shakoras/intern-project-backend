@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'git@github.com:Shakoras/internship-project-backend.git',
+                git url: 'git@github.com:Shakoras/intern-project-backend.git',
                     credentialsId: 'b0eadd19-a3e9-4405-9646-c0f37b8dee78', 
                     branch: 'main'
             }
