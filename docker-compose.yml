@@ -1,0 +1,38 @@
+services:
+  db-devopsproject:
+    image: mysql:8  # Use the MySQL image
+    container_name: db-devopsproject
+    restart: always
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'  # Allow empty passwords for any MySQL user
+      MYSQL_ROOT_PASSWORD: ''  # Leave root password empty
+      MYSQL_DATABASE: springdb  # Create the backend database
+      MYSQL_USER: zaoueli        # Create a user with the name 'zaoueli'
+      MYSQL_PASSWORD: 40233262   # Set the user's password
+    ports:
+      - '3307:3306'  # Map host port 3306 to container port 3306 (default MySQL port)
+    volumes:
+      - mysql-data:/var/lib/mysql  # Use a named volume for MySQL data
+    networks:
+      - backend
+  app:
+    build: .
+    image: shakoras/springbootapp-devopsproject:latest  # Changed image name
+    restart: always
+    container_name: springbootapp-devopsproject  # Changed container name
+    ports:
+      - '8086:8080'  # Map host port 8086 to container port 8080
+    depends_on:
+      - db-devopsproject  # Change the dependency to match the db service name
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db-devopsproject:3306/springdb  # Change JDBC URL for MySQL 
+      SPRING_DATASOURCE_USERNAME: zaoueli                       # Username to connect 
+      SPRING_DATASOURCE_PASSWORD: 40233262                       # Password to connect
+    networks:
+      - backend
+
+volumes:
+  mysql-data:  # Name of the volume for MySQL data
+  
+networks:
+  backend:

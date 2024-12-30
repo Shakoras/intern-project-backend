@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-devopsproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-devopsproject
+  template:
+    metadata:
+      labels:
+        app: db-devopsproject
+    spec:
+      containers:
+        - name: db-devopsproject
+          image: mysql:8
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "yes"    # Allows an empty root password
+            - name: MYSQL_ROOT_PASSWORD
+              value: ""
+            - name: MYSQL_DATABASE
+              value: springdb
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_username_devproject
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_password_devproject

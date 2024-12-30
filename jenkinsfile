@@ -1,0 +1,171 @@
+pipeline {
+    agent any
+     parameters {
+            choice(name: 'DEPLOYMENT_METHOD', choices: ['Docker Compose', 'Kubernetes'], description: 'Choose the deployment method.')
+        }
+  environment {
+        TF_VAR_subscription_id = credentials('subscription_id')
+        TF_VAR_tenant_id = credentials('tenant_id')
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: 'git@github.com:Shakoras/internship-project-backend.git',
+                    credentialsId: 'b0eadd19-a3e9-4405-9646-c0f37b8dee78', 
+                    branch: 'main'
+            }
+        }
+
+        stage('Install dependencies') {
+            steps {
+                sh 'mvn clean compile'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+         stage('SonarQube Analysis') {
+            steps {
+                script {
+                    def scannerHome = tool 'SonarScanner'
+                    withSonarQubeEnv {
+                        sh "${scannerHome}/bin/sonar-scanner"
+                    }
+                }
+            }
+        }
+
+        stage('Build Application') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+    stage('Deploy JAR to Nexus') {
+            steps {
+                script {
+                    // Uploading the JAR to Nexus Snapshots repository
+                    sh """
+                    mvn deploy:deploy-file \
+                    -DgroupId=tn.esprit \
+                    -DartifactId=${env.artifactId_devproject} \
+                    -Dversion=${env.version_devproject} \
+                    -Dpackaging=jar \
+                    -Dfile=target/${env.artifactId_devproject}-${env.version_devproject}.jar \
+                    -DrepositoryId=nexus \
+                    -Durl=${env.mavenRepositoryUrl}
+                    """
+                }
+            }
+        }
+
+      stage('Building Docker image') {
+            steps {
+                script {
+                    sh "${env.dbuild}"
+                }
+            }
+        }
+        stage('Push to DockerHub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
+                                                      usernameVariable: 'DOCKER_USER',
+                                                      passwordVariable: 'DOCKER_PASS')]) {
+                        echo 'Pushing Image to DockerHub...'
+                        sh '''
+                            echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                            docker push ${DOCKERHUB_REPO}
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Setup Azure Resources with Terraform') {
+            when {
+                expression { params.DEPLOYMENT_METHOD == 'Kubernetes' }
+            }
+            steps {
+                script {
+                    echo 'Initializing and applying Terraform...'
+                    sh '''
+                        cd terraform
+                        terraform init
+                        terraform plan
+                        terraform apply -auto-approve
+                    '''
+                    echo 'Resource provisioning was Successful!'
+                }
+            }
+        }
+
+        stage('Deployment Stage') {
+            steps {
+                script {
+                    if (params.DEPLOYMENT_METHOD == 'Docker Compose') {
+                        echo 'Deploying Application locally with Docker Compose...'
+
+                        // Stop and remove the existing container (if any)
+                        sh 'docker stop springbootapp-devopsproject || true'
+                        sh 'docker rm springbootapp-devopsproject || true'
+                        sh 'docker stop db-devopsproject || true'
+                        sh 'docker rm db-devopsproject || true'
+
+
+                        // Run the new container using Docker Compose
+                        sh "${env.dup_d}"
+                        echo 'Local deployment is Successful!'
+                    } else if (params.DEPLOYMENT_METHOD == 'Kubernetes') {
+                        echo 'Deploying to Azure Kubernetes Service...'
+
+                        // Ensure kubectl is configured with the AKS cluster
+                        sh '''
+                            az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER} --overwrite-existing
+                        '''
+
+                        // Apply MySQL and Spring Boot deployments
+                        sh '''
+                            kubectl apply -f k8s/configmap.yaml
+                            kubectl apply -f k8s/secret.yaml
+                            kubectl apply -f k8s/deployment-mysql.yaml
+                            kubectl apply -f k8s/deployment-app.yaml
+                            kubectl apply -f k8s/service.yaml
+                        '''
+
+                        echo 'Waiting for the application to be available...'
+                        sh 'kubectl rollout status deployment/springbootapp-devopsproject'
+                        echo 'Azure deployment is Successful!'
+                    }
+                }
+            }
+        }
+    stage("Run Prometheus") {
+            steps {
+                script {
+                    sh('docker start prometheus')
+                }
+            }
+        }
+
+        stage("Run Grafana") { 
+            steps {
+                script {
+                    sh('docker start grafana')
+                }
+            }
+        }
+
+    }
+
+    post {
+        success {
+            echo 'Pipeline succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}

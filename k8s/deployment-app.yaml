@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: springbootapp-devopsproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: springbootapp-devopsproject
+  template:
+    metadata:
+      labels:
+        app: springbootapp-devopsproject
+    spec:
+      containers:
+        - name: springbootapp-devopsproject
+          image: shakoras/springbootapp-devopsproject:latest
+          ports:
+            - containerPort: 8086
+          env:
+            - name: db_url_devproject
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: db_url_devproject
+            - name: db_username_devproject
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_username_devproject
+            - name: db_password_devproject
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: db_password_devproject
