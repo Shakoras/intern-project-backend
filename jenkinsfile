@@ -50,7 +50,7 @@ pipeline {
                     // Uploading the JAR to Nexus Snapshots repository
                     sh """
                     mvn deploy:deploy-file \
-                    -DgroupId=tn.esprit \
+                    -DgroupId=com.example \
                     -DartifactId=${env.artifactId_devproject} \
                     -Dversion=${env.version_devproject} \
                     -Dpackaging=jar \
