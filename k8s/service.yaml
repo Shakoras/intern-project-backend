@@ -4,7 +4,6 @@ metadata:
   name: spring-boot-service
 spec:
   type: LoadBalancer
-  loadBalancerIP: 51.8.22.168  # Static IP for the backend
   selector:
     app: springbootapp-devopsproject
   ports:
