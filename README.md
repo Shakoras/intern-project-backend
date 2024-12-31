@@ -2,7 +2,7 @@
 Internship application backend 
 ## Overview
 
-This project is a Spring Boot application that utilizes Docker for deployment. This README explains the environment variables used in the Jenkins pipeline and their purposes.
+This project is a Spring Boot and Angular application that utilizes Docker for deployment. This README explains the environment variables used in the Jenkins pipeline and their purposes for the backend.
 
 ## Environment Variables
 
@@ -30,25 +30,17 @@ The following environment variables are defined for use in the Jenkins pipeline:
 
 The following environment variables are used to configure the database connection and email service in `application.properties`:
 
-- `db_url`
+- `db_url_devproject`
     - Description: JDBC URL for the PostgreSQL database.
-    - Example: "jdbc:postgresql://localhost:1234/backend"
+    - Example: "jdbc:mysql://localhost:3306/springdb?createDatabaseIfNotExist=true"
 
-- `db_username`
-    - Description: Username for the PostgreSQL database.
-    - Example: "postgres"
+- `db_username_devproject`
+    - Description: Username for the mysql database.
+    - Example: "zaoueli"
 
-- `db_password`
-    - Description: Password for the PostgreSQL database.
+- `db_password_devproject`
+    - Description: Password for the mysql database.
     - Example: "your_password"
-
-- `spring.mail.username`
-    - Description: Gmail account used for sending emails.
-    - Example: "your_email@gmail.com"
-
-- `spring.mail.password`
-    - Description: Application-specific password for Gmail.
-    - Example: "your_generated_password"
 
 These variables are used in the `application.properties` file.
 
@@ -69,6 +61,46 @@ These variables are used in the `application.properties` file.
 - **`ddown`**
     - **Description**: Command to stop and remove the Docker containers.
     - **Example**: `"docker-compose down"` (optional, if used)
+      
+### Deployment Properties
+
+These variables are used for pushing `Docker Images` to `Dockerhub` and deploying the application to `Microsoft Azure`:
+
+- **`DOCKERHUB_REPO`**
+    - **Description**: DockerHub repository to which the Docker image is pushed.
+    - **Example**: `"shakoras/springbootapp-devopsproject:latest"`
+
+- **`MYSQL_DATABASE`**
+    - **Description**: Name of the MySQL database.
+    - **Example**: `"springdb"`
+
+- **`MYSQL_CONTAINER`**
+    - **Description**: Name of the MySQL container.
+    - **Example**: `"db-devopsproject"`
+
+- **`APP_CONTAINER`**
+    - **Description**: Name of the Spring Boot application container.
+    - **Example**: `"springbootapp-devopsproject"`
+
+- **`RESOURCE_GROUP`**
+    - **Description**: Azure resource group for the project.
+    - **Example**: `"DevopsProjectRg"`
+
+- **`AKS_CLUSTER`**
+    - **Description**: Azure Kubernetes Service (AKS) cluster name.
+    - **Example**: `"DevopsProjectAKSCluster"`
+
+## Notes
+
+**Spotless Check**: The project includes the Spotless plugin in the pom.xml file for code formatting. This helps enforce pre-commit checks to ensure code quality and consistency.
+
+**JaCoCo**: The JaCoCo plugin is also added to pom.xml for code coverage. It works with SonarQube to provide detailed reports on code coverage during the analysis stage.
+
+**Docker Compose**: The dup_d variable starts containers in detached mode, freeing up the terminal for other tasks.
+
+**Terraform**: Ensure Terraform is installed and configured to manage Azure resources.
+
+**Kubernetes**: Verify kubectl is configured to interact with the AKS cluster.
 
 ## Usage
 
@@ -81,7 +113,12 @@ To run the Jenkins pipeline, ensure the environment variables are correctly set 
 5. **SonarQube Analysis**: Code quality checks are performed using SonarQube.
 6. **Deploy JAR to Nexus**: The built JAR file is uploaded to the Nexus repository.
 7. **Building Docker Images**: Docker images are built using the specified `dbuild` command.
-8. **Deploy to Ubuntu VM**: The Docker containers are started using the `dup_d` command in detached mode (`-d` option starts the containers in the background, allowing your terminal to be free for other tasks).
+8. **Provision Resources with Terraform**: Uses Terraform to set up resources in Azure.
+9. **Deploy to Ubuntu VM**: The Docker containers are started using the `dup_d` command in detached mode (`-d` option starts the containers in the background, allowing your terminal to be free for other tasks).
+10. **Deploy to Microsoft Azure**: Deploys the application to Azure Kubernetes Service (AKS).
+11. **Run Prometheus**: Starts the Prometheus container for monitoring.
+12. **Run Grafana**: Starts the Grafana container for visualization.
+
 
 ## Conclusion
 
