@@ -1,5 +1,5 @@
 # Project Name
-Crowdfunding Platform Backend
+Internship application backend 
 ## Overview
 
 This project is a Spring Boot application that utilizes Docker for deployment. This README explains the environment variables used in the Jenkins pipeline and their purposes.
